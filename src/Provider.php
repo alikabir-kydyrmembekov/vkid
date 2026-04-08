@@ -16,32 +16,32 @@ use SocialiteProviders\Manager\OAuth2\User;
  *
  * Features:
  * - PKCE with cache-backed verifier (no reliance on PHP session cookies).
- * - Configurable cache store/prefix/TTL via config('services.vkid.*').
+ * - Configurable cache store/prefix/TTL via config('services.vkontakte.*').
  * - Robust token response normalization (prevents "string offset" issues).
  * - User profile via api.vk.com with configurable API version.
  * - Email/phone extraction from id_token (when scopes and app permissions allow).
  */
 class Provider extends AbstractProvider
 {
-    public const IDENTIFIER = 'VKID';
+    public const IDENTIFIER = 'VKONTAKTE';
 
     /**
      * Default scopes if not overridden via ->scopes([...]) or
-     * globally via config('services.vkid.scopes').
+     * globally via config('services.vkontakte.scopes').
      *
      * @var array<int, string>
      */
     protected $scopes = ['email'];
 
     /**
-     * Allow global override of scopes via config('services.vkid.scopes')
-     * and per-request override via Socialite::driver('vkid')->scopes([...]).
+     * Allow global override of scopes via config('services.vkontakte.scopes')
+     * and per-request override via Socialite::driver('vkontakte')->scopes([...]).
      *
      * @return array<int, string>
      */
     public function getScopes(): array
     {
-        $cfg = config('services.vkid.scopes');
+        $cfg = config('services.vkontakte.scopes');
 
         if (is_array($cfg) && !empty($cfg)) {
             // If runtime ->scopes([...]) was set, $this->scopes already reflects it; otherwise use config.
@@ -91,10 +91,10 @@ class Provider extends AbstractProvider
         $challenge = $this->codeChallengeS256($verifier);
 
         // Configurable cache store/prefix/ttl
-        $ttlMinutes = (int) config('services.vkid.pkce_ttl', 10);
+        $ttlMinutes = (int) config('services.vkontakte.pkce_ttl', 10);
         $expiresAt  = now()->addMinutes($ttlMinutes);
         $key        = $this->pkceCacheKey($state);
-        $store      = (string) config('services.vkid.cache_store', '');
+        $store      = (string) config('services.vkontakte.cache_store', '');
 
         try {
             if ($store !== '') {
@@ -105,7 +105,7 @@ class Provider extends AbstractProvider
         } catch (\Throwable $e) {
             throw new \RuntimeException(
                 'VKID PKCE cache failure: unable to persist code_verifier. ' .
-                'Check services.vkid.cache_store and your cache configuration.',
+                'Check services.vkontakte.cache_store and your cache configuration.',
                 0,
                 $e
             );
@@ -137,7 +137,7 @@ class Provider extends AbstractProvider
         }
 
         $key   = $this->pkceCacheKey((string) $state);
-        $store = (string) config('services.vkid.cache_store', '');
+        $store = (string) config('services.vkontakte.cache_store', '');
         try {
             $verifier = $store !== '' ? Cache::store($store)->pull($key) : Cache::pull($key);
         } catch (\Throwable $e) {
@@ -202,7 +202,7 @@ class Provider extends AbstractProvider
      */
     protected function getUserByToken($token): array
     {
-        $apiVersion = (string) config('services.vkid.api_version', '5.199');
+        $apiVersion = (string) config('services.vkontakte.api_version', '5.199');
 
         $resp = Http::timeout(10)->get('https://api.vk.com/method/users.get', [
             'access_token' => $token,
@@ -262,7 +262,7 @@ class Provider extends AbstractProvider
      */
     protected function pkceCacheKey(?string $state): string
     {
-        $prefix = (string) config('services.vkid.cache_prefix', 'socialite:vkid:pkce:');
+        $prefix = (string) config('services.vkontakte.cache_prefix', 'socialite:vkid:pkce:');
 
         return $prefix . ($state ?? 'no-state:' . Str::random(8));
     }

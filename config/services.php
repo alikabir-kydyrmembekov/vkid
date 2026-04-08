@@ -58,7 +58,7 @@ return [
      *
      * api_version    — VK API version used for requests (default: '5.199').
      */
-    'vkid' => [
+    'vkontakte' => [
         'client_id'     => env('VKID_CLIENT_ID'),
         'client_secret' => env('VKID_CLIENT_SECRET'),
         'redirect'      => env('VKID_REDIRECT_URI'),

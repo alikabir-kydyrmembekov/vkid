@@ -8,6 +8,6 @@ final class VKIDExtendSocialite
 {
     public function handle(SocialiteWasCalled $event): void
     {
-        $event->extendSocialite('vkid', Provider::class);
+        $event->extendSocialite('vkontakte', Provider::class);
     }
 }
