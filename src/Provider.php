@@ -8,7 +8,6 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 use Laravel\Socialite\Two\InvalidStateException;
-use League\OAuth2\Client\Token\AccessToken;
 use SocialiteProviders\Manager\OAuth2\AbstractProvider;
 use SocialiteProviders\Manager\OAuth2\User;
 
@@ -107,7 +106,8 @@ class Provider extends AbstractProvider
             throw new \RuntimeException(
                 'VKID PKCE cache failure: unable to persist code_verifier. ' .
                 'Check services.vkid.cache_store and your cache configuration.',
-                previous: $e
+                0,
+                $e
             );
         }
 
@@ -144,7 +144,8 @@ class Provider extends AbstractProvider
             throw new \RuntimeException(
                 'VKID PKCE cache failure: unable to retrieve code_verifier. ' .
                 'Ensure the configured cache store is available.',
-                previous: $e
+                0,
+                $e
             );
         }
 
@@ -196,17 +197,15 @@ class Provider extends AbstractProvider
     /**
      * Fetch VK profile by access token.
      *
-     * @param  AccessToken|string  $token
+     * @param  string  $token
      * @return array<string, mixed>
      */
     protected function getUserByToken($token): array
     {
-        $accessToken = $token instanceof AccessToken ? $token->getToken() : (string) $token;
-
         $apiVersion = (string) config('services.vkid.api_version', '5.199');
 
         $resp = Http::timeout(10)->get('https://api.vk.com/method/users.get', [
-            'access_token' => $accessToken,
+            'access_token' => $token,
             'fields'       => 'id,screen_name,photo_200,first_name,last_name,domain',
             'v'            => $apiVersion,
         ])->json();
