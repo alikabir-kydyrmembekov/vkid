@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace MoveMoveApp\VKID;
 
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
+use GuzzleHttp\Client;
 use Laravel\Socialite\Two\InvalidStateException;
 use SocialiteProviders\Manager\OAuth2\AbstractProvider;
 use SocialiteProviders\Manager\OAuth2\User;
@@ -204,13 +204,14 @@ class Provider extends AbstractProvider
     {
         $apiVersion = (string) config('services.vkontakte.api_version', '5.199');
 
-        $resp = Http::timeout(10)->get('https://api.vk.com/method/users.get', [
+        $resp = $this->getHttpClient()->get('https://api.vk.com/method/users.get', [
             'access_token' => $token,
             'fields'       => 'id,screen_name,photo_200,first_name,last_name,domain',
             'v'            => $apiVersion,
-        ])->json();
+        ]);
+        $data = json_decode((string) $resp->getBody(), true);
 
-        $u = $resp['response'][0] ?? null;
+        $u = $data['response'][0] ?? null;
 
         return $u ?: [];
     }
