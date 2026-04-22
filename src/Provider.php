@@ -202,17 +202,16 @@ class Provider extends AbstractProvider
      */
     protected function getUserByToken($token): array
     {
-        $apiVersion = (string) config('services.vkontakte.api_version', '5.199');
-
-        $resp = $this->getHttpClient()->get('https://api.vk.com/method/users.get', [
-            'access_token' => $token,
-            'fields'       => 'id,screen_name,photo_200,first_name,last_name,domain',
-            'v'            => $apiVersion,
-        ]);
+        $options = [
+            'form_params' => [
+                'client_id' => $this->clientId,
+                'access_token' => $token
+            ]
+        ];
+        $resp = $this->getHttpClient()->post('https://id.vk.ru/oauth2/user_info', $options);
         $data = json_decode((string) $resp->getBody(), true);
 
-        $u = $data['response'][0] ?? null;
-
+        $u = $data['user'] ?? null;
         return $u ?: [];
     }
 
@@ -226,32 +225,12 @@ class Provider extends AbstractProvider
      */
     protected function mapUserToObject(array $u): User
     {
-        $email = null;
-        $phone = null;
-
-        // accessTokenResponseBody is set by AbstractProvider; normalize to array.
-        $body = $this->accessTokenResponseBody ?? null;
-        if (is_string($body)) {
-            $decoded = json_decode($body, true);
-            $body    = is_array($decoded) ? $decoded : [];
-        }
-
-        if (is_array($body) && !empty($body['id_token'])) {
-            $email = $this->emailFromIdToken($body['id_token']);
-            $phone = $this->phoneFromIdToken($body['id_token']);
-        }
-
-        // Expose extras through raw payload (accessible via $user->user['phone']).
-        if ($phone !== null) {
-            $u['phone'] = $phone;
-        }
-
-        return (new User())->setRaw($u)->map([
-            'id'       => (string) ($u['id'] ?? ''),
+        return (new User())->map([
+            'id'       => (string) ($u['user_id'] ?? ''),
             'nickname' => $u['screen_name'] ?? null,
             'name'     => trim(($u['first_name'] ?? '') . ' ' . ($u['last_name'] ?? '')) ?: null,
-            'email'    => $email,                     // may be null
-            'avatar'   => $u['photo_200'] ?? null,
+            'email'    => $u['email'],                     // may be null
+            'avatar'   => $u['avatar'] ?? null,
         ]);
     }
 
