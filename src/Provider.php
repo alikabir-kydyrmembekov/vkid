@@ -128,8 +128,8 @@ class Provider extends AbstractProvider
      */
     protected function getTokenFields($code): array
     {
-        $state    = request()->query('state');
-        $deviceId = request()->query('device_id');
+        $state    = request()->input('state');
+        $deviceId = request()->input('device_id');
 
         if (!$state) {
             // Be explicit about invalid callback shape.
